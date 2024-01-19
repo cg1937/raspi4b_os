@@ -2,7 +2,6 @@
 ##
 ## Copyright (c) 2018-2023 Andre Richter <andre.o.richter@gmail.com>
 
-include ./common/docker.mk
 include ./common/format.mk
 include ./common/operating_system.mk
 
@@ -88,17 +87,6 @@ OBJCOPY_CMD = rust-objcopy \
 
 EXEC_QEMU = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
 
-##------------------------------------------------------------------------------
-## Dockerization
-##------------------------------------------------------------------------------
-DOCKER_CMD          = docker run -t --rm -v $(shell pwd):/work/tutorial -w /work/tutorial
-DOCKER_CMD_INTERACT = $(DOCKER_CMD) -i
-
-# DOCKER_IMAGE defined in include file (see top of this file).
-DOCKER_QEMU  = $(DOCKER_CMD_INTERACT) $(DOCKER_IMAGE)
-DOCKER_TOOLS = $(DOCKER_CMD) $(DOCKER_IMAGE)
-
-
 
 ##--------------------------------------------------------------------------------------------------
 ## Targets
@@ -172,14 +160,14 @@ clean:
 ##------------------------------------------------------------------------------
 readelf: $(KERNEL_ELF)
 	$(call color_header, "Launching readelf")
-	@$(DOCKER_TOOLS) $(READELF_BINARY) --headers $(KERNEL_ELF)
+	$(READELF_BINARY) --headers $(KERNEL_ELF)
 
 ##------------------------------------------------------------------------------
 ## Run objdump
 ##------------------------------------------------------------------------------
 objdump: $(KERNEL_ELF)
 	$(call color_header, "Launching objdump")
-	@$(DOCKER_TOOLS) $(OBJDUMP_BINARY) --disassemble --demangle \
+	$(OBJDUMP_BINARY) --disassemble --demangle \
                 --section .text   \
                 --section .rodata \
                 $(KERNEL_ELF) | rustfilt
@@ -189,5 +177,5 @@ objdump: $(KERNEL_ELF)
 ##------------------------------------------------------------------------------
 nm: $(KERNEL_ELF)
 	$(call color_header, "Launching nm")
-	@$(DOCKER_TOOLS) $(NM_BINARY) --demangle --print-size $(KERNEL_ELF) | sort | rustfilt
+	$(NM_BINARY) --demangle --print-size $(KERNEL_ELF) | sort | rustfilt
 
