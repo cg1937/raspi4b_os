@@ -60,7 +60,7 @@ SECTIONS
     ***********************************************************************************************/
     .data : 
     {
-         *(.data*) 
+        *(.data*) 
     } :segment_data
 
     /* Section is zeroed in pairs of u64. Align start and end to 16 bytes */
