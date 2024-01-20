@@ -37,6 +37,7 @@ impl<T> NullLock<T> {
 impl<T> interface::Mutex for NullLock<T> {
     type Data = T;
 
+    /// 目前是一个假锁，功能上并没有防止竞争的作用。
     fn lock<'a, R>(&'a self, f: impl FnOnce(&'a mut Self::Data) -> R) -> R {
         // In a real lock, there would be code encapsulating this line that ensures that this
         // mutable reference will ever only be given out once at a time.

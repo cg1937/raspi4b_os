@@ -7,10 +7,6 @@ struct QEMUOutputInner {
     chars_written: usize,
 }
 
-pub struct QEMUOutput {
-    inner: NullLock<QEMUOutputInner>,
-}
-
 static QEMUOUTPUT: QEMUOutput = QEMUOutput::new();
 
 impl QEMUOutputInner {
@@ -40,6 +36,10 @@ impl fmt::Write for QEMUOutputInner {
 
         Ok(())
     }
+}
+
+pub struct QEMUOutput {
+    inner: NullLock<QEMUOutputInner>,
 }
 
 impl QEMUOutput {
