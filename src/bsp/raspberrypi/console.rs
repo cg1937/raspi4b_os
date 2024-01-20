@@ -17,6 +17,7 @@ impl QEMUOutputInner {
     /// Send a character.
     fn write_char(&mut self, c: char) {
         unsafe {
+            // MMIO 地址：0x3F201000 - UART0 (serial port, PL011)，是通过QEMU模拟的UART0串口输出。
             core::ptr::write_volatile(0x3F20_1000 as *mut u8, c as u8);
         }
 
