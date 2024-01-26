@@ -12,6 +12,9 @@ include ./common/operating_system.mk
 # Default to the RPi3.
 BSP ?= rpi3
 
+# Default to a serial device name that is common in Linux.
+DEV_SERIAL ?= /dev/ttyUSB0
+
 
 
 ##--------------------------------------------------------------------------------------------------
@@ -34,8 +37,7 @@ else ifeq ($(BSP),rpi4)
     TARGET            = aarch64-unknown-none-softfloat
     KERNEL_BIN        = kernel8.img
     QEMU_BINARY       = qemu-system-aarch64
-    QEMU_MACHINE_TYPE = raspi4b1g
-    # QEMU_RELEASE_ARGS = -d in_asm -display none
+    QEMU_MACHINE_TYPE = raspi4b2g
     QEMU_RELEASE_ARGS = -serial stdio -display none
     OBJDUMP_BINARY    = aarch64-none-elf-objdump
     NM_BINARY         = aarch64-none-elf-nm
@@ -88,11 +90,12 @@ OBJCOPY_CMD = rust-objcopy \
 
 EXEC_QEMU          = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
 EXEC_TEST_DISPATCH = ruby ./common/tests/dispatch.rb
+EXEC_MINITERM      = ruby ./common/serial/miniterm.rb
 
 ##--------------------------------------------------------------------------------------------------
 ## Targets
 ##--------------------------------------------------------------------------------------------------
-.PHONY: all doc qemu clippy clean readelf objdump nm check
+.PHONY: all doc qemu miniterm clippy clean readelf objdump nm check
 
 all: $(KERNEL_BIN)
 
@@ -124,7 +127,7 @@ $(KERNEL_BIN): $(KERNEL_ELF)
 
 ##------------------------------------------------------------------------------
 ## Generate the documentation
-##------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------
 doc:
 	$(call color_header, "Generating docs")
 	@$(DOC_CMD) --document-private-items --open
@@ -142,7 +145,14 @@ else # QEMU is supported.
 qemu: $(KERNEL_BIN)
 	$(call color_header, "Launching QEMU")
 	$(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -kernel $(KERNEL_BIN)
+
 endif
+
+##------------------------------------------------------------------------------
+## Connect to the target's serial
+##------------------------------------------------------------------------------
+miniterm:
+	$(EXEC_MINITERM) $(DEV_SERIAL)
 
 ##------------------------------------------------------------------------------
 ## Run clippy
@@ -180,6 +190,8 @@ nm: $(KERNEL_ELF)
 	$(call color_header, "Launching nm")
 	$(NM_BINARY) --demangle --print-size $(KERNEL_ELF) | sort | rustfilt
 
+
+
 ##--------------------------------------------------------------------------------------------------
 ## Testing targets
 ##--------------------------------------------------------------------------------------------------
@@ -197,7 +209,7 @@ else # QEMU is supported.
 ##------------------------------------------------------------------------------
 test_boot: $(KERNEL_BIN)
 	$(call color_header, "Boot test - $(BSP)")
-	@$(DOCKER_TEST) $(EXEC_TEST_DISPATCH) $(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -kernel $(KERNEL_BIN)
+	$(EXEC_TEST_DISPATCH) $(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -kernel $(KERNEL_BIN)
 
 test: test_boot
 
